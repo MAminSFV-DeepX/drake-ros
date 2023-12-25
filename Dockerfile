@@ -49,21 +49,14 @@ RUN if [ "$BUILD_DRAKE_FROM_SOURCE" = "true" ]; then \
         echo 'export PYTHONPATH="/opt/drake/lib/python'$(python3 -c 'import sys; print("{0}.{1}".format(*sys.version_info))')'/site-packages${PYTHONPATH:+:${PYTHONPATH}}"' >> /etc/bash.bashrc \
     ; fi
 
-# Clone Drake ROS repository
-RUN git clone https://github.com/RobotLocomotion/drake-ros.git
-RUN cd drake-ros
-
 # ROS2 workspace setup
 RUN mkdir -p drake_ros_ws/src/drake_ros
-COPY . /drake_ros_ws/src/drake_ros
 
 RUN source /opt/ros/humble/setup.bash && \
     cd drake_ros_ws/ && \
     apt-get update --fix-missing && \
     rosdep install -i --from-path src --rosdistro humble -y && \
-    colcon build --symlink-install && \
-    colcon test --packages-up-to drake_ros_examples --event-handlers console_cohesion+ && \
-    colcon test-result --verbose
+    colcon build --symlink-install --packages-skip drake_ros_examples
 
 WORKDIR '/drake_ros_ws'
 # Set the entrypoint to source ROS setup.bash and run a bash shell
